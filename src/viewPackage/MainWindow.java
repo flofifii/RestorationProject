@@ -1,4 +1,4 @@
-package viewPackage;
+/*package viewPackage;
 //import exceptionPackage.ConnectionException;
 
 import javax.swing.*;
@@ -56,4 +56,47 @@ public class MainWindow extends JFrame{
                 new MainWindow();
             }
         });
-    }}
+    }}*/
+
+package viewPackage;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class MainWindow extends JFrame {
+
+    private final JPanel centerPanel;
+
+    public MainWindow() {
+        super("Restoration – Gestion des produits");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(900, 600);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        // barre de statut (facultatif)
+        JLabel statusBar = new JLabel("Prêt");
+        statusBar.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        add(statusBar, BorderLayout.SOUTH);
+
+        // zone centrale qui recevra tes vues
+        centerPanel = new JPanel(new BorderLayout());
+        add(centerPanel, BorderLayout.CENTER);
+    }
+
+    /** Ajoute/remplace le contenu central par un JScrollPane (utilisé par ListingProductsDisplay). */
+    public void addScrollPane(JScrollPane scrollPane) {
+        centerPanel.removeAll();
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+    }
+
+    /** Optionnel : si tu veux poser un composant brut au centre (sans JScrollPane) */
+    public void setCenter(Component comp) {
+        centerPanel.removeAll();
+        centerPanel.add(comp, BorderLayout.CENTER);
+        centerPanel.revalidate();
+        centerPanel.repaint();
+    }
+}
