@@ -15,6 +15,11 @@ public class Supplier {
         this.email = email;
     }
 
+    //Pour l'acces DAO
+    public Supplier(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }

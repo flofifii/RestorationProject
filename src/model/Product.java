@@ -17,7 +17,7 @@ public class Product {
 
     public Product(String name, Supplier supplier, Category category, Integer minQuantityDesired,
                    Integer stockQuantity, Integer reorderQuantity, LocalDate dateOfSale,
-                   Boolean isFrozen) {
+                   Boolean isFrozen, String description) {
         this.name = name;
         this.supplier = supplier;
         this.category = category;
@@ -26,7 +26,16 @@ public class Product {
         this.reorderQuantity = reorderQuantity;
         this.dateOfSale = dateOfSale;
         this.isFrozen = isFrozen;
-        //this.description = description; //optionnel
+        this.description = description;
+    }
+
+    //Si pas de description
+
+    public Product(String name, Supplier supplier, Category category,
+                   int minQuantityDesired, int stockQuantity, int reorderQuantity,
+                   LocalDate dateOfSale, boolean isFrozen) {
+        this(name, supplier, category, minQuantityDesired, stockQuantity, reorderQuantity,
+                dateOfSale, isFrozen, null);
     }
 
     public String getName() {

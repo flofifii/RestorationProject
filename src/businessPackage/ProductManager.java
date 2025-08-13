@@ -12,10 +12,11 @@ public class ProductManager {
     private ProductDAO dao;
 
     public ProductManager() {
-        setDAO(new RequestDB());
+        setDAO(new RequestDB()); // on passe une implémentation par défaut
     }
 
-    public void setDAO(RequestDB dao) {
+
+    public void setDAO(ProductDAO dao) {
         this.dao = dao;
     }
 

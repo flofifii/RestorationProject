@@ -2,72 +2,96 @@ package dataAccess;
 
 import exceptionPackage.ConnectionException;
 import exceptionPackage.TitleException;
+import model.Category;
 import model.Product;
+import model.Supplier;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.sql.ResultSet;
 
 public class RequestDB implements ProductDAO {
-    private SingletonConnexion singletonConnexion;
 
     public RequestDB() {
-        singletonConnexion = new SingletonConnexion();
+        // Pas besoin d'instancier SingletonConnexion
     }
 
+    /**
+     * Retourne la liste des noms de produits.
+     */
     public ArrayList<String> getProduct() throws ConnectionException {
         ArrayList<String> products = new ArrayList<>();
         try {
-            String sqlinstruction =
-                    "SELECT product.name" +
-                    "FROM PRODUCT u; ";
-            PreparedStatement statement = SingletonConnexion.getInstance().prepareStatement(sqlinstruction);
-            ResultSet data = statement.executeQuery();
-            while(data.next()) {
-                products.add(data.getString("name"));
+            String sql =
+                    "SELECT name " +
+                            "FROM product;";
+
+            PreparedStatement statement = SingletonConnexion.getInstance().prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
+
+            while (rs.next()) {
+                products.add(rs.getString("name"));
             }
         } catch (SQLException e) {
-            throw new ConnectionException("Error accessing the database  : " + e.getMessage());
+            throw new ConnectionException("Error accessing the database: " + e.getMessage());
         }
         return products;
     }
 
+    /**
+     * Retourne la liste complète des produits avec toutes leurs infos.
+     */
+    @Override
     public ArrayList<Product> getAllProducts() throws ConnectionException, TitleException {
         ArrayList<Product> products = new ArrayList<>();
         try {
-            String sqlInstruction =
-                    "SELECT * " +
+            String sql =
+                    "SELECT name, supplierName, categoryName, " +
+                            "       minQuantityDesired, stockQuantity, reorderQuantity, " +
+                            "       dateOfSale, isFrozen, description " +
                             "FROM product;";
 
-            PreparedStatement statement = SingletonConnexion.getInstance().prepareStatement(sqlInstruction);
-            ResultSet data = statement.executeQuery();
-            int product_id;
-            String name;
-            int supplier_id;
-            int category_id;
-            int min_quantity_desired;
-            int stock_quantity;
-            int reorder_quantity;
-            LocalDate date_of_sale;
-            boolean is_frozen;
+            PreparedStatement statement = SingletonConnexion.getInstance().prepareStatement(sql);
+            ResultSet rs = statement.executeQuery();
 
-            while (data.next()) {
-                product_id = data.getInt("product_id");
-                name = data.getString("name");
-                supplier_id = data.getInt("supplier_id");
-                category_id = data.getInt("category_id");
-                min_quantity_desired = data.getInt("min_quantity_desired");
-                stock_quantity = data.getInt("stock_quantity");
-                reorder_quantity = data.getInt("reorder_quantity");
-                java.sql.Date sqlDate = data.getDate("date_of_sale");
-                is_frozen = data.getBoolean("is_frozen");
-                Product product = new Product(name, product_id, supplier_id, category_id, min_quantity_desired, stock_quantity, reorder_quantity, sqlDate);
+            while (rs.next()) {
+                String name = rs.getString("name");
+                String supplierName = rs.getString("supplierName");
+                String categoryName = rs.getString("categoryName");
+                int minQuantityDesired = rs.getInt("minQuantityDesired");
+                int stockQuantity = rs.getInt("stockQuantity");
+                int reorderQuantity = rs.getInt("reorderQuantity");
+
+                java.sql.Date sqlDate = rs.getDate("dateOfSale");
+                LocalDate dateOfSale = (sqlDate != null) ? sqlDate.toLocalDate() : null;
+
+                boolean isFrozen = rs.getBoolean("isFrozen");
+                String description = rs.getString("description");
+
+                // Création des objets liés
+                Supplier supplier = new Supplier(supplierName);
+
+                Category category = new Category(categoryName);
+
+                // Création du produit
+                Product product = new Product(
+                        name,
+                        supplier,
+                        category,
+                        minQuantityDesired,
+                        stockQuantity,
+                        reorderQuantity,
+                        dateOfSale,
+                        isFrozen,
+                        description
+                );
+
                 products.add(product);
             }
         } catch (SQLException e) {
-            throw new ConnectionException("Error accessing the database  : " + e.getMessage());
+            throw new ConnectionException("Error accessing the database: " + e.getMessage());
         }
         return products;
     }
