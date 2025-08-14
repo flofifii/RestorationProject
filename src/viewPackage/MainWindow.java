@@ -1,102 +1,76 @@
-/*package viewPackage;
-//import exceptionPackage.ConnectionException;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-public class MainWindow extends JFrame{
-    private JMenuBar menuBar;
-    private JMenu searchMenu, modificationMenu;
-    private Container frameContainer;
-    private JMenuItem searchUserItem, searchUserItem2, searchUserItem3, statisticItem, deleteSongItem, createUpdateSongItem, listingSongItem;
-    private JLabel flickeringLabel;
-    //private TextFlickerThread flickerThread;
-    private JPanel bottomPanel;
-
-    public MainWindow() {
-        super("Menu principal");
-        setBounds(100, 100, 700, 700);
-        frameContainer = this.getContentPane();
-        frameContainer.setLayout(new BorderLayout());
-
-        bottomPanel = new JPanel();
-        bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-
-        menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
-        searchMenu = new JMenu("Search");
-        menuBar.add(searchMenu);
-        searchUserItem = new JMenuItem("Search 1");
-        searchMenu.add(searchUserItem);
-        setVisible(true);
-        searchUserItem2 = new JMenuItem("Search 2");
-        setVisible(true);
-        searchMenu.add(searchUserItem2);
-        searchUserItem3 = new JMenuItem("Search 3");
-        searchMenu.add(searchUserItem3);
-        setVisible(true);
-        statisticItem = new JMenuItem("statistic");
-        searchMenu.add(statisticItem);
-        setVisible(true);
-
-        flickeringLabel = new JLabel("JAVAPROJECT");
-        flickeringLabel.setForeground(Color.RED);
-        bottomPanel.add(flickeringLabel);
-        frameContainer.add(bottomPanel, BorderLayout.SOUTH);
-
-    }
-
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new MainWindow();
-            }
-        });
-    }}*/
-
 package viewPackage;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MainWindow extends JFrame {
-
     private final JPanel centerPanel;
+    private final CardLayout cards;
+
+    public static final String HOME = "HOME";
+    public static final String PRODUCTS = "PRODUCTS";
+    public static final String ORDERS = "ORDERS";
+    public static final String CUSTOMERS = "CUSTOMERS";
 
     public MainWindow() {
-        super("Restoration – Gestion des produits");
+        super("Restoration – Gestion");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 600);
         setLocationRelativeTo(null);
+
+        // Layout principal
         setLayout(new BorderLayout());
 
-        // barre de statut (facultatif)
-        JLabel statusBar = new JLabel("Prêt");
-        statusBar.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
-        add(statusBar, BorderLayout.SOUTH);
+        // Zone centrale avec CardLayout
+        cards = new CardLayout();
+        centerPanel = new JPanel(cards);
 
-        // zone centrale qui recevra tes vues
-        centerPanel = new JPanel(new BorderLayout());
+        // Ajouter les vues
+        centerPanel.add(new HomePanel(), HOME);
+        centerPanel.add(new ListingProductsDisplay(), PRODUCTS);
+        centerPanel.add(new JLabel("Vue Commandes (à faire)", SwingConstants.CENTER), ORDERS);
+        centerPanel.add(new JLabel("Vue Clients (à faire)", SwingConstants.CENTER), CUSTOMERS);
+
         add(centerPanel, BorderLayout.CENTER);
+
+        // Barre de statut (optionnelle)
+        JLabel status = new JLabel("Prêt");
+        status.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        add(status, BorderLayout.SOUTH);
+
+        // Créer et configurer la barre de menu
+        setJMenuBar(createMenuBar());
+
+        // Afficher la page d’accueil par défaut
+        cards.show(centerPanel, HOME);
     }
 
-    /** Ajoute/remplace le contenu central par un JScrollPane (utilisé par ListingProductsDisplay). */
-    public void addScrollPane(JScrollPane scrollPane) {
-        centerPanel.removeAll();
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
-        centerPanel.revalidate();
-        centerPanel.repaint();
-    }
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
 
-    /** Optionnel : si tu veux poser un composant brut au centre (sans JScrollPane) */
-    public void setCenter(Component comp) {
-        centerPanel.removeAll();
-        centerPanel.add(comp, BorderLayout.CENTER);
-        centerPanel.revalidate();
-        centerPanel.repaint();
+        // Menu "Navigation"
+        JMenu menuNav = new JMenu("Navigation");
+
+        JMenuItem homeItem = new JMenuItem("Accueil");
+        JMenuItem productsItem = new JMenuItem("Produits");
+        JMenuItem ordersItem = new JMenuItem("Commandes");
+        JMenuItem customersItem = new JMenuItem("Clients");
+
+        // Actions de navigation
+        homeItem.addActionListener(e -> cards.show(centerPanel, HOME));
+        productsItem.addActionListener(e -> cards.show(centerPanel, PRODUCTS));
+        ordersItem.addActionListener(e -> cards.show(centerPanel, ORDERS));
+        customersItem.addActionListener(e -> cards.show(centerPanel, CUSTOMERS));
+
+        // Ajouter au menu
+        menuNav.add(homeItem);
+        menuNav.add(productsItem);
+        menuNav.add(ordersItem);
+        menuNav.add(customersItem);
+
+        // Ajouter le menu à la barre
+        menuBar.add(menuNav);
+
+        return menuBar;
     }
 }

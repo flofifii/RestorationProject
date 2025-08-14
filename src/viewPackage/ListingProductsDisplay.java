@@ -7,42 +7,48 @@ import model.Product;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.util.ArrayList;
 
 public class ListingProductsDisplay extends JPanel {
-    private ProductController productController;
+    private final ProductController productController = new ProductController();
+    private final DefaultTableModel tableModel;
 
-    public void setProductController(ProductController productController) {
-        this.productController = productController;
+    public ListingProductsDisplay() {
+        setLayout(new BorderLayout());
+
+        // Barre d’actions interne
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton loadBtn = new JButton("Afficher les produits");
+        actions.add(loadBtn);
+        add(actions, BorderLayout.NORTH);
+
+        // Tableau vide au départ
+        String[] columns = {"Nom", "Fournisseur", "Catégorie", "Stock"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        JTable table = new JTable(tableModel);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+
+        // Action bouton
+        loadBtn.addActionListener(e -> loadProducts());
     }
 
-    public ListingProductsDisplay(MainWindow window) {
-        setProductController(new ProductController());
-
-        JTable table;
+    private void loadProducts() {
+        tableModel.setRowCount(0);
         try {
             ArrayList<Product> products = productController.getAllProducts();
-
-            // Création du modèle de table
-            String[] columnNames = { "Nom", "Fournisseur", "Catégorie", "Stock" };
-            DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
-
-            // Ajout des données
             for (Product p : products) {
-                Object[] rowData = {
+                tableModel.addRow(new Object[]{
                         p.getName(),
-                        p.getSupplier().getName(),
-                        p.getCategory().getName(),
+                        (p.getSupplier() != null) ? p.getSupplier().getName() : "",
+                        (p.getCategory() != null) ? p.getCategory().getName() : "",
                         p.getStockQuantity()
-                };
-                tableModel.addRow(rowData);
+                });
             }
-
-            table = new JTable(tableModel);
-            window.addScrollPane(new JScrollPane(table));
-        }
-        catch (ConnectionException | TitleException e){
-            JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+        } catch (ConnectionException | TitleException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
 }
