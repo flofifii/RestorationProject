@@ -10,7 +10,7 @@ public class MainWindow extends JFrame {
     public static final String HOME = "HOME";
     public static final String PRODUCTS = "PRODUCTS";
     public static final String ORDERS = "ORDERS";
-    public static final String CUSTOMERS = "CUSTOMERS";
+    public static final String SEARCH = "SEARCH";
 
     public MainWindow() {
         super("Restoration – Gestion");
@@ -27,9 +27,9 @@ public class MainWindow extends JFrame {
 
         // Ajouter les vues
         centerPanel.add(new HomePanel(), HOME);
-        centerPanel.add(new ListingProductsDisplay(), PRODUCTS);
+        centerPanel.add(new ProductPanel(), PRODUCTS);
         centerPanel.add(new JLabel("Vue Commandes (à faire)", SwingConstants.CENTER), ORDERS);
-        centerPanel.add(new JLabel("Vue Clients (à faire)", SwingConstants.CENTER), CUSTOMERS);
+        centerPanel.add(new JLabel("Vue Recherche (à faire)", SwingConstants.CENTER), SEARCH);
 
         add(centerPanel, BorderLayout.CENTER);
 
@@ -54,19 +54,19 @@ public class MainWindow extends JFrame {
         JMenuItem homeItem = new JMenuItem("Accueil");
         JMenuItem productsItem = new JMenuItem("Produits");
         JMenuItem ordersItem = new JMenuItem("Commandes");
-        JMenuItem customersItem = new JMenuItem("Clients");
+        JMenuItem searchItem = new JMenuItem("Recherche");
 
         // Actions de navigation
         homeItem.addActionListener(e -> cards.show(centerPanel, HOME));
         productsItem.addActionListener(e -> cards.show(centerPanel, PRODUCTS));
         ordersItem.addActionListener(e -> cards.show(centerPanel, ORDERS));
-        customersItem.addActionListener(e -> cards.show(centerPanel, CUSTOMERS));
+        searchItem.addActionListener(e -> cards.show(centerPanel, SEARCH));
 
         // Ajouter au menu
         menuNav.add(homeItem);
         menuNav.add(productsItem);
         menuNav.add(ordersItem);
-        menuNav.add(customersItem);
+        menuNav.add(searchItem);
 
         // Ajouter le menu à la barre
         menuBar.add(menuNav);

@@ -22,4 +22,12 @@ public class ProductController {
     public ArrayList<Product> getAllProducts() throws ConnectionException, TitleException {
         return manager.getAllProducts();
     }
+
+    public Product getProductByName(String productName) throws ConnectionException, TitleException {
+        return manager.getProductByName(productName);
+    }
+
+    public void createProduct(Product product) throws ConnectionException, TitleException{
+        manager.createProduct(product);
+    }
 }

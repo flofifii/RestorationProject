@@ -88,9 +88,10 @@ public class RequestDB implements ProductDAO {
 
                 products.add(p);
 
-                rs.close();
-                statement.close();
+
             }
+            rs.close();
+            statement.close();
         } catch (SQLException e) {
             throw new ConnectionException("Error accessing the database: " + e.getMessage());
         }

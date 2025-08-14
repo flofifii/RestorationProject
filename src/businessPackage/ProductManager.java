@@ -23,4 +23,12 @@ public class ProductManager {
     public ArrayList<Product> getAllProducts() throws ConnectionException, TitleException {
         return dao.getAllProducts();
     }
+
+    public Product getProductByName(String productName) throws ConnectionException, TitleException{
+        return dao.getProductByName(productName);
+    }
+
+    public void createProduct(Product product) throws ConnectionException, TitleException{
+        dao.createProduct(product);
+    }
 }
