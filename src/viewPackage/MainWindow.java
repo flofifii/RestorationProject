@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
         // Ajouter les vues
         centerPanel.add(new HomePanel(), HOME);
         centerPanel.add(new ProductPanel(), PRODUCTS);
-        centerPanel.add(new JLabel("Vue Commandes (à faire)", SwingConstants.CENTER), ORDERS);
+        centerPanel.add(new OrderPanel(), ORDERS);
         centerPanel.add(new JLabel("Vue Recherche (à faire)", SwingConstants.CENTER), SEARCH);
 
         add(centerPanel, BorderLayout.CENTER);

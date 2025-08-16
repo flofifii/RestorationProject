@@ -5,6 +5,9 @@ import exceptionPackage.TitleException;
 import model.Category;
 import model.Product;
 import model.Supplier;
+import model.Order;
+import model.Person;
+import model.Customer;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,7 +15,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class RequestDB implements ProductDAO {
+public class RequestDB implements ProductDAO, OrderDAO {
 
     public RequestDB() {
         // Pas besoin d'instancier SingletonConnexion
@@ -42,9 +45,9 @@ public class RequestDB implements ProductDAO {
         );
     }
 
-     /* Retourne la liste complète des produits avec toutes leurs infos.
-     */
     @Override
+    /* Retourne la liste complète des produits avec toutes leurs infos.
+     */
     public ArrayList<Product> getAllProducts() throws ConnectionException, TitleException {
         ArrayList<Product> products = new ArrayList<>();
         try {
@@ -195,4 +198,178 @@ public class RequestDB implements ProductDAO {
             throw new ConnectionException("Erreur DB (deleteProduct) : " + e.getMessage());
         }
     }
+
+
+    // Mapper une ligne de ResultSet vers Order
+    private Order mapRowToOrder(ResultSet rs) throws SQLException {
+        int number = rs.getInt("number");
+        int customerId = rs.getInt("customerId");
+        String paymentMethod = rs.getString("paymentMethod");
+        boolean isTakeaway =rs.getBoolean("isTakeaway");
+
+        java.sql.Date dCreation = rs.getDate("creationDate");
+        java.sql.Date dDelivery = rs.getDate("deliveryDate");
+        java.time.LocalDate creationDate = (dCreation != null) ? dCreation.toLocalDate() : null;
+        java.time.LocalDate deliveryDate = (dDelivery != null) ? dDelivery.toLocalDate() : null;
+
+        String commentary = rs.getString("commentary");
+        String specificRequest = rs.getString("specificRequest");
+
+        Customer customer = new Customer(customerId);
+
+        Order order = new Order(number, customer, paymentMethod, isTakeaway, creationDate);
+        order.setDeliveryDate(deliveryDate);
+        order.setCommentary(commentary);
+        order.setSpecificRequest(specificRequest);
+        return order;
+    }
+
+    public ArrayList<model.Order> getAllOrders() throws ConnectionException, TitleException {
+        ArrayList<model.Order> orders = new ArrayList<>();
+        final String sql =
+                "SELECT number, customerId, paymentMethod, isTakeaway, " +
+                        "       creationDate, deliveryDate, commentary, specificRequest " +
+                        "FROM `order`;";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                orders.add(mapRowToOrder(rs));
+            }
+            return orders;
+        } catch (SQLException e) {
+            throw new ConnectionException("Error accessing the database (getAllOrders): " + e.getMessage());
+        }
+    }
+
+    public model.Order getOrderByNumber(int number) throws ConnectionException, TitleException {
+        final String sql =
+                "SELECT number, customerId, paymentMethod, isTakeaway, " +
+                        "       creationDate, deliveryDate, commentary, specificRequest " +
+                        "FROM `order` WHERE number = ?;";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+            ps.setInt(1, number);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new TitleException(String.valueOf(number), "Commande introuvable : " + number);
+                }
+                return mapRowToOrder(rs);
+            }
+        } catch (SQLException e) {
+            throw new ConnectionException("DB error (getOrderByNumber): " + e.getMessage());
+        }
+    }
+
+    public void createOrder(model.Order order) throws ConnectionException, TitleException {
+        if (order == null || order.getcustomer() == null) {
+            throw new TitleException(null, "Le client est obligatoire pour créer une commande.");
+        }
+
+        final String sql =
+                "INSERT INTO `order` " +
+                        "(customerId, paymentMethod, isTakeaway, creationDate, deliveryDate, commentary, specificRequest) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?);";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+
+            ps.setInt(1, order.getcustomer().getPersonID());
+            ps.setString(2, order.getPaymentMethod());
+
+            // Boolean nullable -> setNull si null
+            if (order.isTakeaway() == null) {
+                ps.setNull(3, java.sql.Types.BOOLEAN);
+            } else {
+                ps.setBoolean(3, order.isTakeaway());
+            }
+
+            // LocalDate -> java.sql.Date
+            ps.setDate(4, (order.getCreationDate() != null) ? java.sql.Date.valueOf(order.getCreationDate()) : null);
+            ps.setDate(5, (order.getDeliveryDate() != null) ? java.sql.Date.valueOf(order.getDeliveryDate()) : null);
+
+            ps.setString(6, order.getCommentary());
+            ps.setString(7, order.getSpecificRequest());
+
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            if ("23000".equals(e.getSQLState())) {
+                throw new TitleException(null, "Création refusée (contrainte). Vérifie le client (customerId).");
+            }
+            throw new ConnectionException("Erreur DB (createOrder): " + e.getMessage());
+        }
+    }
+
+    public void updateOrder(model.Order order) throws ConnectionException, TitleException {
+        if (order == null || order.getNumber() <= 0) {
+            throw new TitleException(null, "Le numéro de commande est obligatoire pour la mise à jour.");
+        }
+        if (order.getcustomer() == null) {
+            throw new TitleException(null, "Le client est obligatoire.");
+        }
+
+        final String sql =
+                "UPDATE `order` SET " +
+                        "  customerId = ?, " +
+                        "  paymentMethod = ?, " +
+                        "  isTakeaway = ?, " +
+                        "  creationDate = ?, " +
+                        "  deliveryDate = ?, " +
+                        "  commentary = ?, " +
+                        "  specificRequest = ? " +
+                        "WHERE number = ?;";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+            ps.setInt(1, order.getcustomer().getPersonID());
+            ps.setString(2, order.getPaymentMethod());
+
+            if (order.isTakeaway() == null) {
+                ps.setNull(3, java.sql.Types.BOOLEAN);
+            } else {
+                ps.setBoolean(3, order.isTakeaway());
+            }
+
+            ps.setDate(4, (order.getCreationDate() != null) ? java.sql.Date.valueOf(order.getCreationDate()) : null);
+            ps.setDate(5, (order.getDeliveryDate() != null) ? java.sql.Date.valueOf(order.getDeliveryDate()) : null);
+
+            ps.setString(6, order.getCommentary());
+            ps.setString(7, order.getSpecificRequest());
+            ps.setInt(8, order.getNumber());
+
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new TitleException(String.valueOf(order.getNumber()), "Commande introuvable : " + order.getNumber());
+            }
+        } catch (SQLException e) {
+            if ("23000".equals(e.getSQLState())) {
+                throw new TitleException(String.valueOf(order.getNumber()),
+                        "Mise à jour refusée (contrainte). Vérifie le client (customerId).");
+            }
+            throw new ConnectionException("Erreur DB (updateOrder): " + e.getMessage());
+        }
+    }
+
+    public void deleteOrder(int number) throws ConnectionException, TitleException {
+        if (number <= 0) {
+            throw new TitleException(null, "Le numéro de commande est obligatoire pour la suppression.");
+        }
+        final String sql = "DELETE FROM `order` WHERE number = ?;";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+            ps.setInt(1, number);
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new TitleException(String.valueOf(number), "Commande introuvable : " + number);
+            }
+        } catch (SQLException e) {
+            if ("23000".equals(e.getSQLState())) {
+                throw new TitleException(String.valueOf(number),
+                        "Suppression impossible : la commande possède des détails (orderDetail).");
+            }
+            throw new ConnectionException("Erreur DB (deleteOrder): " + e.getMessage());
+        }
+    }
+
 }
+
+

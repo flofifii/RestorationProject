@@ -15,6 +15,11 @@ public class Customer extends Person {
         this.registrationDate = registrationDate;
         this.hasDiscount = hasDiscount;
     }
+    //pour DAO
+    public Customer(int PersoneID){
+        super(PersoneID);
+    }
+
 
     // Getters
     public Integer getRewardPoint() {

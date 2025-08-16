@@ -15,6 +15,11 @@ public class Person {
         this.lastName = lastName;
     }
 
+    //pour le DAO
+    public Person(int personID){
+        this.personID = personID;
+    }
+
     //  Getters
     public int getPersonID() {
         return personID;
