@@ -30,4 +30,13 @@ public class ProductController {
     public void createProduct(Product product) throws ConnectionException, TitleException{
         manager.createProduct(product);
     }
+
+    public void updateProduct(Product product) throws ConnectionException, TitleException{
+        manager.updateProduct(product);
+    }
+
+    public void deleteProduct(String name) throws ConnectionException, TitleException {
+        manager.deleteProduct(name);
+    }
+
 }

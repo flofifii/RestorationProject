@@ -16,6 +16,7 @@ public class ListingProductPanel extends JPanel {
     private final ProductController controller = new ProductController();
     private final DefaultTableModel tableModel;
     private final JTable table;
+    private final DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public ListingProductPanel() {
         setLayout(new BorderLayout());
@@ -30,6 +31,7 @@ public class ListingProductPanel extends JPanel {
         tableModel = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
+
         table = new JTable(tableModel);
 
         //table.setFillsViewportHeight(true);
@@ -42,12 +44,12 @@ public class ListingProductPanel extends JPanel {
         refresh();
     }
 
+
     /** Recharge la liste des produits depuis le controller. */
     public void refresh() {
         tableModel.setRowCount(0);
         try {
             ArrayList<Product> products = controller.getAllProducts();
-            DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             for (Product p : products) {
                 tableModel.addRow(new Object[]{

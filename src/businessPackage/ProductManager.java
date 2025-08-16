@@ -31,4 +31,13 @@ public class ProductManager {
     public void createProduct(Product product) throws ConnectionException, TitleException{
         dao.createProduct(product);
     }
+
+    public void updateProduct(Product product) throws ConnectionException, TitleException{
+        dao.updateProduct(product);
+    }
+
+    public void deleteProduct(String name) throws ConnectionException, TitleException {
+        dao.deleteProduct(name);
+    }
+
 }
