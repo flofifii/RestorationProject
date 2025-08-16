@@ -42,32 +42,7 @@ public class RequestDB implements ProductDAO {
         );
     }
 
-    /*
-     * Retourne la liste des noms de produits.
-     */
-    /*public ArrayList<String> getProduct() throws ConnectionException {
-        ArrayList<String> products = new ArrayList<>();
-        try {
-            String sql =
-                    "SELECT name " +
-                            "FROM product;";
-
-            PreparedStatement statement = SingletonConnexion.getInstance().prepareStatement(sql);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                products.add(rs.getString("name"));
-            }
-        } catch (SQLException e) {
-            throw new ConnectionException("Error accessing the database: " + e.getMessage());
-        }
-        return products;
-    }
-    */
-
-
-    /**
-     * Retourne la liste complète des produits avec toutes leurs infos.
+     /* Retourne la liste complète des produits avec toutes leurs infos.
      */
     @Override
     public ArrayList<Product> getAllProducts() throws ConnectionException, TitleException {
@@ -153,6 +128,71 @@ public class RequestDB implements ProductDAO {
                         "Création impossible : ce nom existe déjà ou le fournisseur/catégorie n'existe pas.");
             }
             throw new ConnectionException("Erreur lors de la création du produit : " + e.getMessage());
+        }
+    }
+
+    public void updateProduct(Product product) throws ConnectionException, TitleException {
+        if (product == null || product.getName() == null || product.getName().isBlank()) {
+            throw new TitleException(null, "Le nom du produit est obligatoire pour la mise à jour.");
+        }
+
+        final String sql =
+                "UPDATE product SET " +
+                        "  supplierName = ?, " +
+                        "  categoryName = ?, " +
+                        "  minQuantityDesired = ?, " +
+                        "  stockQuantity = ?, " +
+                        "  reorderQuantity = ?, " +
+                        "  dateOfSale = ?, " +
+                        "  isFrozen = ?, " +
+                        "  description = ? " +
+                        "WHERE name = ?;";
+
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+            ps.setString(1,  (product.getSupplier() != null) ? product.getSupplier().getName() : null);
+            ps.setString(2,  (product.getCategory() != null) ? product.getCategory().getName() : null);
+            ps.setInt(3,     product.getMinQuantityDesired());
+            ps.setInt(4,     product.getStockQuantity());
+            ps.setInt(5,     product.getReorderQuantity());
+            ps.setDate(6,    (product.getDateOfSale() != null) ? java.sql.Date.valueOf(product.getDateOfSale()) : null);
+            ps.setBoolean(7, product.isFrozen());
+            ps.setString(8,  product.getDescription());
+            ps.setString(9,  product.getName()); // PK immuable : on cherche par name
+
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                // rien mis à jour → produit inexistant
+                throw new TitleException(product.getName(), "Produit introuvable : " + product.getName());
+            }
+        } catch (SQLException e) {
+            // 23000 = violation de contrainte (FK supplier/category inexistants, etc.)
+            if ("23000".equals(e.getSQLState())) {
+                throw new TitleException(product.getName(),
+                        "Mise à jour refusée (contrainte). Vérifie fournisseur/catégorie.");
+            }
+            throw new ConnectionException("Erreur DB (updateProduct) : " + e.getMessage());
+        }
+    }
+
+    public void deleteProduct(String name) throws ConnectionException, TitleException {
+        if (name == null || name.isBlank()) {
+            throw new TitleException(null, "Le nom du produit est obligatoire pour la suppression.");
+        }
+
+        final String sql = "DELETE FROM product WHERE name = ?;";
+        try (PreparedStatement ps = SingletonConnexion.getInstance().prepareStatement(sql)) {
+            ps.setString(1, name);
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                throw new TitleException(name, "Produit introuvable : " + name);
+            }
+        } catch (SQLException e) {
+            // 23000 = violation de contrainte FK (référencé par itemDetail, restockDetail, orderDetail, etc.)
+            if ("23000".equals(e.getSQLState())) {
+                throw new TitleException(name,
+                        "Suppression impossible : ce produit est utilisé ailleurs (composition, réassort, etc.).");
+            }
+            throw new ConnectionException("Erreur DB (deleteProduct) : " + e.getMessage());
         }
     }
 }

@@ -11,7 +11,7 @@ public interface ProductDAO {
 
     Product getProductByName(String name) throws ConnectionException, TitleException;
     void createProduct(Product product) throws ConnectionException, TitleException;
-    //void updateProduct(Product product) throws ConnectionException, TitleException;
-    //void deleteProduct(String name) throws ConnectionException, TitleException;
+    void updateProduct(Product product) throws ConnectionException, TitleException;
+    void deleteProduct(String name) throws ConnectionException, TitleException;
 }
 
